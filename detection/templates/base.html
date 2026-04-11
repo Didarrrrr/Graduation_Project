@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Image Forgery Detection System — ELA, metadata, block-based DCT copy-move, and PRNU-inspired noise analysis with fused scoring.">
+    <meta name="keywords" content="image forgery, ELA, metadata, copy-move, DCT, noise analysis, digital forensics, GP_IT_16">
+    <meta name="author" content="Sulaimani Polytechnic University - GP_IT_16">
+    
+    <title>{% block title %}Image Forgery Detection{% endblock %}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('theme');
+                if (stored === 'dark' || stored === 'light') {
+                    document.documentElement.setAttribute('data-theme', stored);
+                } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    
+    <style>
+        :root[data-theme="light"] {
+            --app-bg: #F0F4F8;
+            --card-bg: #FFFFFF;
+            --highlight-bg: #EEF2FF;
+            --elevated-bg: #FFFFFF;
+            --text-body: #1E293B;
+            --text-muted: #64748B;
+            --primary: #4F6EF7;
+            --primary-hover: #3d5bd4;
+            --primary-soft: rgba(79, 110, 247, 0.12);
+            --tag-analysis: #0891B2;
+            --result-clean: #059669;
+            --alert-forgery: #E8550A;
+            --uncertain: #D97706;
+            --border: rgba(30, 41, 59, 0.08);
+            --border-strong: rgba(30, 41, 59, 0.14);
+            --navbar-bg: rgba(255, 255, 255, 0.85);
+            --navbar-border: rgba(30, 41, 59, 0.06);
+            --footer-bg: #1E293B;
+            --footer-text: #E2E8F0;
+            --footer-muted: #94A3B8;
+            --shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+            --shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.1);
+            --input-bg: #FFFFFF;
+            --overlay-bg: rgba(240, 244, 248, 0.92);
+            --bs-primary: #4F6EF7;
+            --bs-primary-rgb: 79, 110, 247;
+        }
+
+        :root[data-theme="dark"] {
+            --app-bg: #0E1117;
+            --card-bg: #161C26;
+            --highlight-bg: #1C2333;
+            --elevated-bg: #1C2333;
+            --text-body: #E6EDF3;
+            --text-muted: #8B949E;
+            --primary: #6B8EFF;
+            --primary-hover: #8aa3ff;
+            --primary-soft: rgba(107, 142, 255, 0.15);
+            --tag-analysis: #22D3EE;
+            --result-clean: #34D399;
+            --alert-forgery: #FF6B35;
+            --uncertain: #FBBF24;
+            --border: rgba(230, 237, 243, 0.08);
+            --border-strong: rgba(230, 237, 243, 0.14);
+            --navbar-bg: rgba(22, 28, 38, 0.88);
+            --navbar-border: rgba(230, 237, 243, 0.06);
+            --footer-bg: #0a0c10;
+            --footer-text: #E6EDF3;
+            --footer-muted: #8B949E;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+            --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.45);
+            --input-bg: #161C26;
+            --overlay-bg: rgba(14, 17, 23, 0.92);
+            --bs-primary: #6B8EFF;
+            --bs-primary-rgb: 107, 142, 255;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--app-bg);
+            color: var(--text-body);
+            line-height: 1.6;
+            transition: background-color 0.35s ease, color 0.35s ease;
+        }
+
+        a {
+            color: var(--primary);
+            transition: color 0.2s ease, opacity 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--primary-hover);
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+            color: var(--text-body);
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--navbar-bg) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--navbar-border);
+            padding: 0.85rem 0;
+            box-shadow: none;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--text-body) !important;
+            letter-spacing: -0.02em;
+        }
+
+        .navbar-brand i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+
+        .nav-link {
+            color: var(--text-muted) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 0.5rem;
+            transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--primary-soft);
+            color: var(--text-body) !important;
+        }
+
+        .nav-link.active {
+            background: var(--primary-soft);
+            color: var(--primary) !important;
+        }
+
+        .navbar-toggler {
+            border-color: var(--border-strong);
+        }
+
+        .navbar-toggler-icon {
+            filter: none;
+        }
+
+        :root[data-theme="dark"] .navbar-toggler-icon {
+            filter: invert(1) brightness(1.2);
+        }
+
+        .btn-theme-toggle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.65rem;
+            border: 1px solid var(--border-strong);
+            background: var(--highlight-bg);
+            color: var(--text-body);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+        }
+
+        .btn-theme-toggle:hover {
+            transform: scale(1.05);
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-theme-toggle .icon-dark { display: none; }
+        :root[data-theme="dark"] .btn-theme-toggle .icon-light { display: none; }
+        :root[data-theme="dark"] .btn-theme-toggle .icon-dark { display: inline; }
+
+        main {
+            min-height: calc(100vh - 200px);
+            padding: 2rem 0;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            background: var(--card-bg);
+            color: var(--text-body);
+            box-shadow: var(--shadow);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.25s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            background: var(--highlight-bg);
+            color: var(--text-body);
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.65rem;
+            transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.2s ease;
+        }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background: var(--primary-hover);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(var(--bs-primary-rgb), 0.35);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 0.65rem;
+            font-weight: 600;
+            background: transparent;
+            transition: all 0.25s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .btn-outline-secondary {
+            border-color: var(--border-strong);
+            color: var(--text-muted);
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--highlight-bg);
+            color: var(--text-body);
+            border-color: var(--border-strong);
+        }
+
+        .btn-success {
+            background: var(--result-clean);
+            border: none;
+        }
+
+        .btn-danger {
+            background: var(--alert-forgery);
+            border: none;
+        }
+
+        .form-control, .form-select {
+            border-radius: 0.65rem;
+            border: 1px solid var(--border-strong);
+            padding: 0.65rem 1rem;
+            background: var(--input-bg);
+            color: var(--text-body);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+            background: var(--input-bg);
+            color: var(--text-body);
+        }
+
+        .form-label {
+            color: var(--text-body);
+            font-weight: 500;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .breadcrumb {
+            --bs-breadcrumb-divider-color: var(--text-muted);
+        }
+
+        .breadcrumb-item a {
+            color: var(--primary);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-muted);
+        }
+
+        .alert {
+            border: none;
+            border-radius: 0.75rem;
+            border-left: 4px solid var(--border-strong);
+        }
+
+        .alert-success {
+            background: color-mix(in srgb, var(--result-clean) 14%, var(--card-bg));
+            color: var(--text-body);
+            border-left-color: var(--result-clean);
+        }
+
+        .alert-warning {
+            background: color-mix(in srgb, var(--uncertain) 16%, var(--card-bg));
+            color: var(--text-body);
+            border-left-color: var(--uncertain);
+        }
+
+        .alert-danger {
+            background: color-mix(in srgb, var(--alert-forgery) 14%, var(--card-bg));
+            color: var(--text-body);
+            border-left-color: var(--alert-forgery);
+        }
+
+        .alert-info {
+            background: color-mix(in srgb, var(--tag-analysis) 14%, var(--card-bg));
+            color: var(--text-body);
+            border-left-color: var(--tag-analysis);
+        }
+
+        .alert-secondary, .alert-light {
+            background: var(--highlight-bg);
+            color: var(--text-body);
+            border-left-color: var(--text-muted);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-strong);
+            border-radius: 1rem;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            background: var(--highlight-bg);
+            transition: border-color 0.3s ease, background 0.3s ease, transform 0.25s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            transform: scale(1.01);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            transform: scale(1.02);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            transition: transform 0.35s ease;
+        }
+
+        .upload-area:hover i {
+            transform: translateY(-4px);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+        }
+
+        .status-authentic {
+            background: color-mix(in srgb, var(--result-clean) 22%, transparent);
+            color: var(--result-clean);
+        }
+
+        .status-suspicious {
+            background: color-mix(in srgb, var(--uncertain) 22%, transparent);
+            color: var(--uncertain);
+        }
+
+        .status-forged {
+            background: color-mix(in srgb, var(--alert-forgery) 22%, transparent);
+            color: var(--alert-forgery);
+        }
+
+        .status-pending {
+            background: var(--highlight-bg);
+            color: var(--text-muted);
+        }
+
+        .progress {
+            height: 0.65rem;
+            border-radius: 9999px;
+            background: var(--highlight-bg);
+            overflow: hidden;
+        }
+
+        .progress-bar.bg-success, .progress-bar[style*="success"] {
+            background: var(--result-clean) !important;
+        }
+
+        .progress-bar.bg-warning, .progress-bar[style*="warning"] {
+            background: var(--uncertain) !important;
+        }
+
+        .progress-bar.bg-danger, .progress-bar[style*="danger"] {
+            background: var(--alert-forgery) !important;
+        }
+
+        footer {
+            background: var(--footer-bg);
+            color: var(--footer-text);
+            padding: 2.5rem 0;
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+        }
+
+        footer a {
+            color: var(--footer-muted);
+            text-decoration: none;
+            transition: color 0.25s ease;
+        }
+
+        footer a:hover {
+            color: var(--footer-text);
+        }
+
+        footer .text-muted, footer p.text {
+            color: var(--footer-muted) !important;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes floatSoft {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.05); }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            opacity: 0;
+        }
+
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--overlay-bg);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner-overlay .spinner-border {
+            color: var(--primary) !important;
+            border-width: 0.2em;
+        }
+
+        .image-comparison {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem;
+        }
+
+        .section-alt {
+            background: var(--card-bg);
+        }
+
+        .surface-muted {
+            background: var(--highlight-bg);
+            border-radius: 0.75rem;
+        }
+
+        .border-theme {
+            border-color: var(--border) !important;
+        }
+
+        .text-primary-custom {
+            color: var(--primary) !important;
+        }
+
+        .text-tag {
+            color: var(--tag-analysis) !important;
+        }
+
+        .text-clean {
+            color: var(--result-clean) !important;
+        }
+
+        .text-forgery {
+            color: var(--alert-forgery) !important;
+        }
+
+        .text-uncertain {
+            color: var(--uncertain) !important;
+        }
+
+        .badge.bg-success {
+            background: var(--result-clean) !important;
+        }
+
+        .badge.bg-warning, .badge.bg-warning.text-dark {
+            background: var(--uncertain) !important;
+            color: #1a1408 !important;
+        }
+
+        :root[data-theme="dark"] .badge.bg-warning,
+        :root[data-theme="dark"] .badge.bg-warning.text-dark {
+            color: #0E1117 !important;
+        }
+
+        .badge.bg-danger {
+            background: var(--alert-forgery) !important;
+        }
+
+        .badge.bg-secondary {
+            background: var(--text-muted) !important;
+        }
+
+        .badge.bg-info {
+            background: var(--tag-analysis) !important;
+        }
+
+        .list-group-item {
+            background: var(--card-bg);
+            color: var(--text-body);
+            border-color: var(--border);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            color: var(--text-body);
+            border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            border-bottom-color: var(--border);
+        }
+
+        .btn-close {
+            filter: none;
+        }
+
+        :root[data-theme="dark"] .btn-close {
+            filter: invert(1);
+        }
+
+        .page-link {
+            background: var(--card-bg);
+            color: var(--primary);
+            border-color: var(--border);
+        }
+
+        .page-item.active .page-link {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--text-body);
+            color: var(--text-body);
+        }
+
+        .table td, .table th {
+            border-color: var(--border);
+            color: var(--text-body);
+        }
+
+        .accordion-item {
+            background: var(--card-bg);
+            border-color: var(--border);
+            color: var(--text-body);
+            --bs-accordion-color: var(--text-body);
+        }
+
+        .accordion-button {
+            background: var(--highlight-bg);
+            color: var(--text-body);
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: var(--primary-soft);
+            color: var(--primary);
+            box-shadow: none;
+        }
+
+        .accordion-button::after {
+            filter: opacity(0.6);
+        }
+
+        :root[data-theme="dark"] .accordion-button::after {
+            filter: invert(1) opacity(0.7);
+        }
+
+        .team-avatar, .tech-icon-ring {
+            background: var(--primary-soft) !important;
+            color: var(--primary) !important;
+        }
+
+        .verdict-card-authentic {
+            border: 2px solid var(--result-clean) !important;
+        }
+        .verdict-card-suspicious {
+            border: 2px solid var(--uncertain) !important;
+        }
+        .verdict-card-forged {
+            border: 2px solid var(--alert-forgery) !important;
+        }
+
+        .hero-visual {
+            position: relative;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-orbit {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 1px solid var(--border-strong);
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+
+        .hero-orbit:nth-child(2) {
+            width: 160px;
+            height: 160px;
+            animation-delay: -1.3s;
+        }
+
+        .hero-core {
+            width: 88px;
+            height: 88px;
+            border-radius: 1.25rem;
+            background: linear-gradient(135deg, var(--primary), var(--tag-analysis));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 2.25rem;
+            box-shadow: 0 20px 50px rgba(var(--bs-primary-rgb), 0.4);
+            animation: floatSoft 5s ease-in-out infinite;
+            z-index: 2;
+        }
+
+        .hero-chip {
+            position: absolute;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.35rem 0.65rem;
+            border-radius: 999px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            box-shadow: var(--shadow);
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .hero-chip:nth-of-type(1) { top: 8%; right: 5%; animation-delay: 0.15s; }
+        .hero-chip:nth-of-type(2) { bottom: 18%; left: 0; animation-delay: 0.3s; color: var(--tag-analysis); border-color: color-mix(in srgb, var(--tag-analysis) 35%, var(--border)); }
+        .hero-chip:nth-of-type(3) { top: 22%; left: 8%; animation-delay: 0.45s; color: var(--result-clean); border-color: color-mix(in srgb, var(--result-clean) 35%, var(--border)); }
+
+        @media (max-width: 991px) {
+            .hero-visual { min-height: 220px; margin-top: 1.5rem; }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand { font-size: 1rem; }
+            .upload-area { padding: 2rem 1rem; }
+            .upload-area i { font-size: 2.5rem; }
+        }
+
+        @supports not (color-mix(in srgb, red, blue)) {
+            .alert-success { background: var(--highlight-bg); }
+            .alert-warning { background: var(--highlight-bg); }
+            .alert-danger { background: var(--highlight-bg); }
+            .alert-info { background: var(--highlight-bg); }
+            .status-authentic { background: rgba(5, 150, 105, 0.15); }
+            .status-suspicious { background: rgba(217, 119, 6, 0.15); }
+            .status-forged { background: rgba(232, 85, 10, 0.15); }
+            :root[data-theme="dark"] .status-authentic { background: rgba(52, 211, 153, 0.15); }
+            :root[data-theme="dark"] .status-suspicious { background: rgba(251, 191, 36, 0.15); }
+            :root[data-theme="dark"] .status-forged { background: rgba(255, 107, 53, 0.15); }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-shield-alt"></i>
+                Image Forgery Detection
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/gallery/' %}active{% endif %}" href="{% url 'gallery' %}">
+                            <i class="fas fa-images me-1"></i> Gallery
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/how-it-works/' %}active{% endif %}" href="{% url 'how_it_works' %}">
+                            <i class="fas fa-cogs me-1"></i> How It Works
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/about/' %}active{% endif %}" href="{% url 'about' %}">
+                            <i class="fas fa-info-circle me-1"></i> About
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                        <button type="button" class="btn-theme-toggle" id="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                            <i class="fas fa-sun icon-light"></i>
+                            <i class="fas fa-moon icon-dark"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3" style="color: var(--footer-text);">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Image Forgery Detection
+                    </h5>
+                    <p class="text mb-2">
+                        A final year project at Sulaimani Polytechnic University<br>
+                        Technical College of Informatics - IT Department
+                    </p>
+                    <p class="text mb-0">
+                        <strong style="color: var(--footer-text);">Academic Year:</strong> 2025-2026
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end mt-4 mt-md-0">
+                    <h6 class="mb-3" style="color: var(--footer-text);">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'home' %}"><i class="fas fa-home me-2"></i>Home</a></li>
+                        <li class="mb-2"><a href="{% url 'gallery' %}"><i class="fas fa-images me-2"></i>Gallery</a></li>
+                        <li class="mb-2"><a href="{% url 'how_it_works' %}"><i class="fas fa-cogs me-2"></i>How It Works</a></li>
+                        <li class="mb-2"><a href="{% url 'about' %}"><i class="fas fa-info-circle me-2"></i>About</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.12);">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        Supervised by: <strong style="color: var(--footer-text);">Aras Masood Ismael</strong>
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text">
+                        <i class="fas fa-users me-2"></i>
+                        Sahand Salih Raouf, Didar Ibrahim Rasull, Ayad Lateef Hama
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            var btn = document.getElementById('theme-toggle');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                var root = document.documentElement;
+                var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                root.setAttribute('data-theme', next);
+                try { localStorage.setItem('theme', next); } catch (e) {}
+            });
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

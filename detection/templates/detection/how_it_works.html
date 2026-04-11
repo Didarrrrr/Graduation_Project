@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+
+{% block title %}How It Works{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="fw-bold mb-4">How It Works</h1>
+                <p class="lead text-muted">
+                    Understanding the science behind our image forgery detection system
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Overview -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h3 class="mb-4">Detection Process Overview</h3>
+                        <p class="mb-4">
+                            Our system uses four complementary digital image forensics techniques to detect forgeries. 
+                            No machine learning is involved — just proven forensic analysis methods that have 
+                            been validated by the digital forensics community.
+                        </p>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold" 
+                                 style="width: 40px; height: 40px; background: var(--primary);">
+                                <span>1</span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Upload Image</h6>
+                                <small class="text-muted">User uploads JPG or PNG image</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold" 
+                                 style="width: 40px; height: 40px; background: var(--primary);">
+                                <span>2</span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Processing</h6>
+                                <small class="text-muted">ELA, metadata, copy-move, and noise analysis performed</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold" 
+                                 style="width: 40px; height: 40px; background: var(--primary);">
+                                <span>3</span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Analysis</h6>
+                                <small class="text-muted">Per-method scores and suspicious regions calculated</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold" 
+                                 style="width: 40px; height: 40px; background: var(--primary);">
+                                <span>4</span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Results</h6>
+                                <small class="text-muted">Fused confidence score and PDF report generated</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 d-flex justify-content-center">
+                        <div class="hero-visual w-100" style="min-height: 240px; max-width: 380px;">
+                            <div class="hero-orbit" aria-hidden="true"></div>
+                            <div class="hero-orbit" aria-hidden="true"></div>
+                            <div class="hero-core" style="width: 72px; height: 72px; font-size: 1.75rem;" aria-hidden="true">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <span class="hero-chip">ELA</span>
+                            <span class="hero-chip">Metadata</span>
+                            <span class="hero-chip">Noise</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Copy-Move Analysis -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-copy me-2"></i>
+                    Copy-Move Detection (Block-Based DCT)
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <p>
+                            Copy-move forgery duplicates content from one area of an image to another area in the same image.
+                            Our method divides the image into overlapping blocks, extracts DCT-based low-frequency
+                            signatures, and clusters consistent displacement vectors to identify repeated regions.
+                        </p>
+                        <h6 class="text-primary-custom mb-2">What We Detect</h6>
+                        <ul class="mb-0">
+                            <li>Duplicated texture/object fragments within a single image</li>
+                            <li>Consistent geometric displacement between matched keypoint groups</li>
+                            <li>Suspicious regions with confidence based on cluster support</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="surface-muted p-4 rounded-3 border border-theme">
+                            <h6 class="mb-3"><i class="fas fa-lightbulb me-2 text-warning"></i>Best Use Case</h6>
+                            <p class="small mb-0">
+                                Strong for in-image duplication and object hiding. A low score can still happen for
+                                splicing or global edits, where no duplicated region exists in the same image.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Noise Analysis -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-grip-horizontal me-2"></i>
+                    Noise Analysis (PRNU-Inspired)
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <p>
+                            This method estimates residual sensor-like noise by subtracting a denoised version from
+                            the original image. It then checks local noise statistics across patches and flags regions
+                            with inconsistent noise signatures.
+                        </p>
+                        <h6 class="text-primary-custom mb-2">What We Detect</h6>
+                        <ul class="mb-0">
+                            <li>Patch-level residual noise anomalies</li>
+                            <li>Local inconsistencies that may indicate inserted or manipulated regions</li>
+                            <li>Suspicious area ratio and region confidence scores</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Noise analysis is especially useful when metadata is missing or stripped.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Error Level Analysis -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-wave-square me-2"></i>
+                    Error Level Analysis (ELA)
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <h5 class="text-primary-custom mb-3">What is ELA?</h5>
+                        <p>
+                            Error Level Analysis (ELA) is a forensic technique introduced by Neal Krawetz in 2007. 
+                            It works by identifying areas in an image that have different compression levels, which 
+                            can indicate manipulation.
+                        </p>
+                        
+                        <h5 class="text-primary-custom mb-3 mt-4">How Does It Work?</h5>
+                        <div class="accordion" id="elaAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#step1">
+                                        Step 1: Resave the Image
+                                    </button>
+                                </h2>
+                                <div id="step1" class="accordion-collapse collapse show" data-bs-parent="#elaAccordion">
+                                    <div class="accordion-body">
+                                        The uploaded image is resaved at a fixed JPEG compression level (95%). 
+                                        This creates a new version of the image with consistent compression.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step2">
+                                        Step 2: Compare Pixel by Pixel
+                                    </button>
+                                </h2>
+                                <div id="step2" class="accordion-collapse collapse" data-bs-parent="#elaAccordion">
+                                    <div class="accordion-body">
+                                        The original image is compared pixel by pixel with the resaved version. 
+                                        The difference between them represents the "error level."
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step3">
+                                        Step 3: Identify Anomalies
+                                    </button>
+                                </h2>
+                                <div id="step3" class="accordion-collapse collapse" data-bs-parent="#elaAccordion">
+                                    <div class="accordion-body">
+                                        Regions where the error level differs significantly from surrounding areas 
+                                        are flagged as potentially tampered. These appear as brighter areas in the ELA image.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="surface-muted p-4 rounded-3 border border-theme">
+                            <h6 class="mb-3"><i class="fas fa-lightbulb me-2 text-warning"></i>Key Insight</h6>
+                            <p class="small">
+                                When an image is edited and resaved, the edited regions will have different 
+                                compression characteristics than the original regions. ELA makes these 
+                                differences visible.
+                            </p>
+                            <hr>
+                            <h6 class="mb-3"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Limitations</h6>
+                            <ul class="small mb-0">
+                                <li>Works best on JPEG images</li>
+                                <li>May produce false positives on high-quality originals</li>
+                                <li>Cannot detect all types of manipulation</li>
+                                <li>Should be used with other analysis methods</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Metadata Analysis -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Metadata Analysis
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <h5 class="text-primary-custom mb-3">What is EXIF Metadata?</h5>
+                        <p>
+                            EXIF (Exchangeable Image File Format) metadata is embedded information in image files 
+                            that records details about the camera, settings, and processing history of the image.
+                        </p>
+                        
+                        <h5 class="text-primary-custom mb-3 mt-4">What We Look For</h5>
+                        <div class="list-group">
+                            <div class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-laptop-code fa-lg text-primary-custom me-3"></i>
+                                <div>
+                                    <h6 class="mb-0">Editing Software</h6>
+                                    <small class="text-muted">Signatures of Photoshop, GIMP, etc.</small>
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-clock fa-lg text-primary-custom me-3"></i>
+                                <div>
+                                    <h6 class="mb-0">Timestamp Inconsistencies</h6>
+                                    <small class="text-muted">Mismatched creation and modification times</small>
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-camera fa-lg text-primary-custom me-3"></i>
+                                <div>
+                                    <h6 class="mb-0">Camera Information</h6>
+                                    <small class="text-muted">Missing or inconsistent camera data</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card border-theme">
+                            <div class="card-body">
+                                <h6 class="mb-3">Common Suspicious Indicators</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><span class="badge bg-danger">High Risk</span></td>
+                                        <td>Adobe Photoshop, GIMP detected in software field</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-warning">Medium Risk</span></td>
+                                        <td>Modification date differs from creation date</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-warning">Medium Risk</span></td>
+                                        <td>Missing camera make/model information</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-info">Low Risk</span></td>
+                                        <td>Social media processing detected</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> Metadata can be stripped or modified. Its absence doesn't 
+                            necessarily mean an image is forged, but its presence of editing signatures is 
+                            a strong indicator of manipulation.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Interpretation Guide -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-book-open me-2"></i>
+                    Interpreting Results
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="alert alert-secondary mb-0">
+                            <strong>Score Fusion:</strong>
+                            Overall confidence is computed as
+                            <strong>ELA ~40%</strong> +
+                            <strong>Metadata ~20%</strong> +
+                            <strong>Copy-Move ~20%</strong> +
+                            <strong>Noise ~20%</strong>.
+                            Trust adjustments (sparse EXIF, few copy-move matches, noisy texture) and
+                            compositing-style reweighting may apply; see the fusion line on each result.
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4 border rounded h-100">
+                            <div class="mb-3">
+                                <span class="badge bg-success fs-5 px-4 py-2">
+                                    <i class="fas fa-check me-2"></i>Authentic
+                                </span>
+                            </div>
+                            <h6>Confidence Score: 0-39%</h6>
+                            <p class="text-muted small mb-0">
+                                The image shows no significant signs of manipulation across ELA, metadata,
+                                copy-move, and noise
+                                analysis indicate the image is likely original.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4 border rounded h-100">
+                            <div class="mb-3">
+                                <span class="badge bg-warning fs-5 px-4 py-2">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Suspicious
+                                </span>
+                            </div>
+                            <h6>Confidence Score: 40-69%</h6>
+                            <p class="text-muted small mb-0">
+                                Some anomalies detected. The image may have minor edits or the analysis 
+                                is inconclusive. Further review of per-method scores is recommended.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4 border rounded h-100">
+                            <div class="mb-3">
+                                <span class="badge bg-danger fs-5 px-4 py-2">
+                                    <i class="fas fa-times me-2"></i>Forged
+                                </span>
+                            </div>
+                            <h6>Confidence Score: 70-100%</h6>
+                            <p class="text-muted small mb-0">
+                                Strong indicators of manipulation detected. Multiple suspicious regions 
+                                found by one or more forensic methods.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Important Disclaimer:</strong> This system provides an automated analysis based 
+                    on digital image processing techniques. While these methods are scientifically validated, 
+                    no automated system is 100% accurate. For critical applications such as legal proceedings, 
+                    always consult with a certified digital forensics expert.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Types of Forgery -->
+<section class="py-4 mb-5">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Types of Image Forgery We Detect
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="text-primary-custom">
+                                    <i class="fas fa-copy me-2"></i>Copy-Move Forgery
+                                </h6>
+                                <p class="small text-muted mb-0">
+                                    Parts of the image are copied and pasted elsewhere in the same image 
+                                    to hide or duplicate objects. This is primarily detected by block-based DCT
+                                    copy-move matching and supported by ELA/noise inconsistencies.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="text-primary-custom">
+                                    <i class="fas fa-cut me-2"></i>Image Splicing
+                                </h6>
+                                <p class="small text-muted mb-0">
+                                    Parts from different images are combined to create a composite image. 
+                                    This often leaves traces in error levels and metadata inconsistencies.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="text-primary-custom">
+                                    <i class="fas fa-magic me-2"></i>Image Retouching
+                                </h6>
+                                <p class="small text-muted mb-0">
+                                    Minor manipulations like removing blemishes, adding/removing objects, 
+                                    or adjusting colors. These edits often have different compression 
+                                    characteristics than the original.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

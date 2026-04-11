@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}About{% endblock %}
+
+{% block content %}
+<!-- About Header -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="fw-bold mb-4">About the Project</h1>
+                <p class="lead text-muted">
+                    An undergraduate final year project dedicated to making digital image forensics accessible to everyone.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Project Information -->
+<section class="py-4">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-university me-2"></i>
+                            Academic Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>University</strong></td>
+                                <td>{{ university }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>College</strong></td>
+                                <td>{{ college }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Department</strong></td>
+                                <td>{{ department }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Academic Year</strong></td>
+                                <td>{{ academic_year }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Supervisor</strong></td>
+                                <td><i class="fas fa-user-tie me-1 text-primary-custom"></i>{{ supervisor }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>
+                            Project Team
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            {% for member in team_members %}
+                            <div class="list-group-item d-flex align-items-center px-0">
+                                <div class="team-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ member }}</h6>
+                                    <small class="text-muted">Developer</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Project Description -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Project Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-primary-custom mb-3">Problem Statement</h6>
+                        <p>
+                            The rapid growth of social networking platforms and the widespread availability of powerful image editing tools 
+                            such as Adobe Photoshop have made image manipulation easier than ever before. Forged images pose serious threats — 
+                            they can spread misinformation in the media, be used as fabricated evidence in legal proceedings causing injustices, 
+                            and fuel cyberbullying on social platforms.
+                        </p>
+                        <p>
+                            There is a clear and urgent need for a system that can detect digital image forgery reliably and make this 
+                            capability accessible to non-experts such as journalists, students, and everyday social media users.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary-custom mb-3">Our Solution</h6>
+                        <p>
+                            This Image Forgery Detection System provides a user-friendly web application that allows users to upload images 
+                            and receive a detailed analysis report indicating whether the image has been forged, along with a visual depiction 
+                            of the forged regions.
+                        </p>
+                        <p>
+                            The system uses a hybrid multi-algorithm forensic pipeline:
+                        </p>
+                        <ul>
+                            <li><strong>Error Level Analysis (ELA):</strong> Detects compression inconsistencies</li>
+                            <li><strong>Metadata Analysis:</strong> Examines EXIF data for editing traces and integrity</li>
+                            <li><strong>Copy-Move Detection (Block-Based DCT):</strong> Detects duplicated regions inside the same image</li>
+                            <li><strong>Noise Analysis (PRNU-inspired):</strong> Detects local noise inconsistencies from tampering</li>
+                        </ul>
+                        <p class="mb-0">
+                            Final confidence is computed by weighted fusion:
+                            <strong>ELA ~40%</strong>, <strong>Metadata ~20%</strong>,
+                            <strong>Copy-Move ~20%</strong>, and <strong>Noise ~20%</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    Technology Stack
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="tech-icon-ring d-inline-flex align-items-center justify-content-center mb-3">
+                                <i class="fab fa-python fa-3x text-primary-custom"></i>
+                            </div>
+                            <h6>Python</h6>
+                            <p class="text-muted small">Core programming language with Pillow, OpenCV, and NumPy libraries</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="tech-icon-ring d-inline-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-server fa-3x text-success"></i>
+                            </div>
+                            <h6>Django Framework</h6>
+                            <p class="text-muted small">Web framework following MVT architecture</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="tech-icon-ring d-inline-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-database fa-3x text-info"></i>
+                            </div>
+                            <h6>MySQL Database</h6>
+                            <p class="text-muted small">Relational database for storing images and analysis results</p>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row g-4 mt-2 align-items-center justify-content-center">
+                    <div class="col-md-3 text-center">
+                        <h6><i class="fab fa-bootstrap me-2 text-primary-custom"></i>Bootstrap 5</h6>
+                        <p class="text-muted small">Frontend framework for responsive design</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6><i class="fab fa-html5 me-2 text-danger"></i>HTML5 & CSS3</h6>
+                        <p class="text-muted small">Modern web standards</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6><i class="fab fa-js me-2 text-warning"></i>JavaScript</h6>
+                        <p class="text-muted small">Interactive frontend functionality</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6><i class="fab fa-git-alt me-2 text-muted"></i>Git/GitHub</h6>
+                        <p class="text-muted small">Version control system</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero-section py-5">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <div class="hero-content fade-in">
+          <p class="small fw-semibold text-uppercase letter-spacing mb-2 text-tag" style="letter-spacing: 0.12em;">
+            Digital image forensics
+          </p>
+          <h1 class="display-5 fw-bold mb-3" style="color: var(--text-body); line-height: 1.15;">
+            Detect forgery with
+            <span class="text-primary-custom">confidence</span>
+          </h1>
+          <p class="lead mb-4 text-muted" style="font-size: 1.05rem;">
+            Upload images for multi-method screening: Error Level Analysis (ELA), metadata,
+            block-based DCT copy-move detection, and PRNU-inspired noise analysis—with optional heatmaps.
+          </p>
+          <div class="d-flex flex-wrap gap-3 mb-4">
+            <a href="#upload-section" class="btn btn-primary btn-lg px-4">
+              <i class="fas fa-upload me-2"></i>Upload image
+            </a>
+            <a href="{% url 'how_it_works' %}" class="btn btn-outline-primary btn-lg px-4">
+              <i class="fas fa-book-open me-2"></i>How it works
+            </a>
+            <a href="{% url 'how_it_works' %}" class="btn btn-outline-primary btn-lg px-4">
+              <i class="fas fa-book-open me-2"></i>How it works
+            </a>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="status-badge status-authentic"><i class="fas fa-wave-square text-tag"></i> ELA</span>
+            <span class="status-badge status-authentic"><i class="fas fa-database text-tag"></i> Metadata</span>
+            <span class="status-badge status-authentic"><i class="fas fa-copy text-tag"></i> Copy-move</span>
+            <span class="status-badge status-authentic"><i class="fas fa-grip-horizontal text-tag"></i> Noise</span>
+            <span class="status-badge status-pending"><i class="fas fa-fire text-uncertain"></i> Heatmap</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-visual fade-in" style="animation-delay: 0.12s">
+          <div class="hero-orbit" aria-hidden="true"></div>
+          <div class="hero-orbit" aria-hidden="true"></div>
+          <div class="hero-core" aria-hidden="true">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <span class="hero-chip">Fusion scoring</span>
+          <span class="hero-chip">DCT blocks</span>
+          <span class="hero-chip">Screening</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="upload-section" class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card fade-in" style="animation-delay: 0.2s">
+          <div class="card-header d-flex align-items-center gap-2">
+            <i class="fas fa-cloud-upload-alt text-primary-custom"></i>
+            <h4 class="mb-0">Upload for analysis</h4>
+          </div>
+          <div class="card-body p-4">
+            <form method="post" action="{% url 'upload_image' %}" enctype="multipart/form-data" id="upload-form">
+              {% csrf_token %}
+
+              <div class="upload-area mb-4" id="drop-zone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h5 class="mb-2" style="color: var(--text-body);">Drag and drop your image</h5>
+                <p class="text-muted mb-3">or click to browse</p>
+                <p class="small text-muted mb-0">
+                  <i class="fas fa-info-circle me-1"></i>
+                  JPG, PNG, BMP, TIFF — max 10MB
+                </p>
+                {{ upload_form.original_image }}
+              </div>
+
+              <div id="file-preview" class="mb-4" style="display: none">
+                <div class="d-flex align-items-center p-3 surface-muted rounded-3 border border-theme">
+                  <i class="fas fa-image fa-2x text-primary-custom me-3"></i>
+                  <div class="flex-grow-1 min-w-0">
+                    <h6 class="mb-1 text-truncate" id="file-name" style="color: var(--text-body);">filename.jpg</h6>
+                    <small class="text-muted" id="file-size">0 MB</small>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-danger rounded-3" id="remove-file" aria-label="Remove file">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <div class="surface-muted border border-theme p-3 rounded-3 mb-3">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <small class="text-muted">Standardized pipeline settings</small>
+                    <div class="d-flex flex-wrap gap-2">
+                      <span class="badge rounded-pill px-3 py-2 border border-theme" style="background: var(--card-bg); color: var(--text-body); font-weight: 500;">
+                        <i class="fas fa-wave-square text-tag me-1"></i>ELA 95%
+                      </span>
+                      <span class="badge rounded-pill px-3 py-2 border border-theme" style="background: var(--card-bg); color: var(--text-body); font-weight: 500;">
+                        <i class="fas fa-sliders-h text-primary-custom me-1"></i>Sensitivity 75%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <h6 class="mb-3 fw-semibold" style="color: var(--text-body);">
+                  <i class="fas fa-sliders-h me-2 text-primary-custom"></i>
+                  Options
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      {{ settings_form.include_metadata }}
+                      <label class="form-check-label" for="id_include_metadata">Include metadata analysis</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      {{ settings_form.generate_heatmap }}
+                      <label class="form-check-label" for="id_generate_heatmap">Generate heatmap</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg py-3 rounded-3" id="analyze-btn" disabled>
+                  <i class="fas fa-search me-2"></i>
+                  Analyze image
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt border-top border-bottom border-theme">
+  <div class="container">
+    <div class="text-center mb-5 fade-in">
+      <h2 class="fw-bold mb-2">How it works</h2>
+      <p class="text-muted mb-0 mx-auto" style="max-width: 520px;">
+        Four complementary checks fused into one interpretable score
+      </p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100 text-center p-4 border-0 fade-in" style="animation-delay: 0.05s">
+          <div class="mb-3">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-3 text-primary-custom" style="width: 4rem; height: 4rem; background: var(--primary-soft);">
+              <i class="fas fa-upload fa-2x"></i>
+            </span>
+          </div>
+          <h5 class="fw-semibold mb-2">1. Upload</h5>
+          <p class="text-muted small mb-0">Drop or select JPG, PNG, BMP, or TIFF.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 text-center p-4 border-0 fade-in" style="animation-delay: 0.1s">
+          <div class="mb-3">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-3 text-tag surface-muted" style="width: 4rem; height: 4rem;">
+              <i class="fas fa-microscope fa-2x"></i>
+            </span>
+          </div>
+          <h5 class="fw-semibold mb-2">2. Analyze</h5>
+          <p class="text-muted small mb-0">ELA, metadata, copy-move, and noise run in parallel.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 text-center p-4 border-0 fade-in" style="animation-delay: 0.15s">
+          <div class="mb-3">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-3 text-clean surface-muted" style="width: 4rem; height: 4rem;">
+              <i class="fas fa-chart-pie fa-2x"></i>
+            </span>
+          </div>
+          <h5 class="fw-semibold mb-2">3. Results</h5>
+          <p class="text-muted small mb-0">Verdict, scores, heatmap when enabled, and a short PDF summary.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if recent_analyses %}
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+      <h2 class="fw-bold mb-0">Recent analyses</h2>
+      <a href="{% url 'gallery' %}" class="btn btn-outline-primary rounded-3">
+        View all <i class="fas fa-arrow-right ms-2"></i>
+      </a>
+    </div>
+    <div class="row g-4">
+      {% for analysis in recent_analyses %}
+      <div class="col-md-4 col-lg-3">
+        <div class="card h-100">
+          <div class="position-relative">
+            {% if analysis.image.original_image %}
+            <img src="{{ analysis.image.original_image.url }}" alt="{{ analysis.image.filename }}" class="card-img-top" style="height: 150px; object-fit: cover;">
+            {% endif %}
+            <div class="position-absolute top-0 end-0 m-2">
+              {% if analysis.forgery_status == 'authentic' %}
+              <span class="badge bg-success rounded-pill"><i class="fas fa-check me-1"></i>Authentic</span>
+              {% elif analysis.forgery_status == 'suspicious' %}
+              <span class="badge bg-warning text-dark rounded-pill"><i class="fas fa-exclamation-triangle me-1"></i>Suspicious</span>
+              {% elif analysis.forgery_status == 'forged' %}
+              <span class="badge bg-danger rounded-pill"><i class="fas fa-times me-1"></i>Forged</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="card-body">
+            <h6 class="card-title text-truncate mb-2">{{ analysis.image.filename }}</h6>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted"><i class="fas fa-chart-line me-1"></i>{{ analysis.confidence_score|floatformat:1 }}%</small>
+              <a href="{% url 'analysis_result' analysis.id %}" class="btn btn-sm btn-primary rounded-3">View</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<div id="loading-overlay" class="spinner-overlay" style="display: none">
+  <div class="text-center fade-in">
+    <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
+      <span class="visually-hidden">Analyzing...</span>
+    </div>
+    <h5 class="mb-1" style="color: var(--text-body);">Analyzing…</h5>
+    <p class="text-muted mb-0 small">This may take a moment</p>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("image-upload");
+    const filePreview = document.getElementById("file-preview");
+    const fileName = document.getElementById("file-name");
+    const fileSize = document.getElementById("file-size");
+    const removeFileBtn = document.getElementById("remove-file");
+    const analyzeBtn = document.getElementById("analyze-btn");
+    const uploadForm = document.getElementById("upload-form");
+    const loadingOverlay = document.getElementById("loading-overlay");
+
+    dropZone.addEventListener("click", function (e) {
+      if (e.target !== fileInput) fileInput.click();
+    });
+
+    dropZone.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", function (e) {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", function (e) {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        updateFilePreview(files[0]);
+      }
+    });
+
+    fileInput.addEventListener("change", function () {
+      if (this.files.length > 0) updateFilePreview(this.files[0]);
+    });
+
+    function updateFilePreview(file) {
+      fileName.textContent = file.name;
+      let size = file.size;
+      let unit = "B";
+      if (size > 1024) { size /= 1024; unit = "KB"; }
+      if (size > 1024) { size /= 1024; unit = "MB"; }
+      fileSize.textContent = size.toFixed(2) + " " + unit;
+      filePreview.style.display = "block";
+      dropZone.style.display = "none";
+      analyzeBtn.disabled = false;
+    }
+
+    removeFileBtn.addEventListener("click", function () {
+      fileInput.value = "";
+      filePreview.style.display = "none";
+      dropZone.style.display = "block";
+      analyzeBtn.disabled = true;
+    });
+
+    uploadForm.addEventListener("submit", function () {
+      loadingOverlay.style.display = "flex";
+    });
+  });
+</script>
+{% endblock %}

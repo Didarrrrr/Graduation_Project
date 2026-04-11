@@ -1,0 +1,465 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Result{% endblock %}
+
+{% block content %}
+<!-- Result Header -->
+<section class="py-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'gallery' %}">Gallery</a></li>
+                <li class="breadcrumb-item active">Analysis Result #{{ result.id }}</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="fw-bold mb-2">Analysis Result</h1>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-file-image me-1"></i>
+                    {{ image.filename }}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'download_report' result.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-download me-2"></i>Download Report
+                </a>
+                <a href="{% url 'home' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>New Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Status Banner -->
+<section class="py-3">
+    <div class="container">
+        <div class="card {% if result.forgery_status == 'authentic' %}verdict-card-authentic{% elif result.forgery_status == 'suspicious' %}verdict-card-suspicious{% else %}verdict-card-forged{% endif %}">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="me-4">
+                                {% if result.forgery_status == 'authentic' %}
+                                <i class="fas fa-check-circle fa-4x text-clean"></i>
+                                {% elif result.forgery_status == 'suspicious' %}
+                                <i class="fas fa-exclamation-triangle fa-4x text-uncertain"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle fa-4x text-forgery"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h4 class="mb-1">{{ result.get_forgery_status_display }}</h4>
+                                <p class="text-muted mb-0">
+                                    Analysis completed in {{ result.processing_time|floatformat:2 }} seconds
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-md-end mt-3 mt-md-0">
+                            <p class="mb-1 text-muted small">Fused confidence</p>
+                            <div class="d-flex align-items-center justify-content-md-end">
+                                <div class="progress flex-grow-1 me-3" style="max-width: 200px; height: 1.5rem;">
+                                    <div class="progress-bar {% if result.confidence_score >= 60 %}bg-danger{% elif result.confidence_score >= 30 %}bg-warning{% else %}bg-success{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ result.confidence_score }}%"
+                                         aria-valuenow="{{ result.confidence_score }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ result.confidence_score|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Image Comparison -->
+<section class="py-4">
+    <div class="container">
+        <h4 class="mb-4">
+            <i class="fas fa-images me-2"></i>
+            Visual Analysis
+        </h4>
+        <div class="row g-4">
+            <!-- Original Image -->
+            <div class="col-md-7 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header py-2">
+                        <small class="fw-bold"><i class="fas fa-image me-1"></i>Original Image</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if image.original_image %}
+                        <img src="{{ image.original_image.url }}" 
+                             alt="Original" 
+                             class="img-fluid w-100"
+                             style="cursor: pointer;"
+                             onclick="openImageModal('{{ image.original_image.url }}', 'Original Image')">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ELA Image -->
+            <div class="col-md-7 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header py-2">
+                        <small class="fw-bold"><i class="fas fa-wave-square me-1"></i>ELA Analysis</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if result.ela_image %}
+                        <img src="{{ result.ela_image.url }}" 
+                             alt="ELA" 
+                             class="img-fluid w-100"
+                             style="cursor: pointer;"
+                             onclick="openImageModal('{{ result.ela_image.url }}', 'Error Level Analysis')">
+                        {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-image fa-3x mb-2"></i>
+                            <p>Not available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Heatmap -->
+            <div class="col-md-7 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header py-2">
+                        <small class="fw-bold"><i class="fas fa-fire me-1"></i>Heatmap</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if result.heatmap_image %}
+                        <img src="{{ result.heatmap_image.url }}" 
+                             alt="Heatmap" 
+                             class="img-fluid w-100"
+                             style="cursor: pointer;"
+                             onclick="openImageModal('{{ result.heatmap_image.url }}', 'Suspicious Regions Heatmap')">
+                        {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-image fa-3x mb-2"></i>
+                            <p>Not available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-muted mt-2">
+            <i class="fas fa-info-circle me-1"></i>
+            Click on any image to view in full size
+        </p>
+    </div>
+</section>
+
+<!-- Analysis Details -->
+<section class="py-4">
+    <div class="container">
+        <div class="row g-4">
+            <!-- ELA Analysis Details -->
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-wave-square me-2"></i>
+                            Error Level Analysis (ELA)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>ELA Score</span>
+                                <span class="fw-bold">{{ result.ela_score|floatformat:2 }}</span>
+                            </div>
+                            <div class="progress" style="height: 0.75rem;">
+                                <div class="progress-bar {% if result.ela_score >= 60 %}bg-danger{% elif result.ela_score >= 30 %}bg-warning{% else %}bg-success{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ result.ela_score }}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        {% with copy_move_score=component_scores.copy_move_score|default:0 noise_score=component_scores.noise_score|default:0 %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Copy-Move Score</span>
+                                <span class="fw-bold">{{ copy_move_score|floatformat:2 }}</span>
+                            </div>
+                            <div class="progress" style="height: 0.75rem;">
+                                <div class="progress-bar {% if copy_move_score >= 60 %}bg-danger{% elif copy_move_score >= 30 %}bg-warning{% else %}bg-success{% endif %}" 
+                                     role="progressbar"
+                                     style="width: {{ copy_move_score }}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Noise Score</span>
+                                <span class="fw-bold">{{ noise_score|floatformat:2 }}</span>
+                            </div>
+                            <div class="progress" style="height: 0.75rem;">
+                                <div class="progress-bar {% if noise_score >= 60 %}bg-danger{% elif noise_score >= 30 %}bg-warning{% else %}bg-success{% endif %}" 
+                                     role="progressbar"
+                                     style="width: {{ noise_score }}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% endwith %}
+
+                        {% if component_scores.fusion %}
+                        <div class="alert alert-secondary border-0 py-2 mb-3 small text-muted">
+                            <strong style="color: var(--text-body);">Score fusion</strong> (trust / agreement, same four methods):
+                            copy-move adjusted {{ component_scores.fusion.copy_move_adjusted }},
+                            noise adjusted {{ component_scores.fusion.noise_adjusted }}{% if component_scores.fusion.metadata_adjusted is not None %},
+                            metadata adjusted {{ component_scores.fusion.metadata_adjusted }}{% endif %};
+                            strong methods: {{ component_scores.fusion.agreement_high_methods }}.{% if component_scores.fusion.compositing_splice_mode %}
+                            <span class="d-block mt-1">Compositing-style pattern (strong ELA, weak copy-move): fusion weights favor ELA and noise over copy-move.</span>{% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="alert {% if result.ela_threshold_exceeded %}alert-warning{% else %}alert-success{% endif %}">
+                            <i class="fas {% if result.ela_threshold_exceeded %}fa-exclamation-triangle{% else %}fa-check-circle{% endif %} me-2"></i>
+                            {% if result.ela_threshold_exceeded %}
+                            Significant error level differences detected. Possible manipulation found.
+                            {% else %}
+                            Error levels appear consistent across the image.
+                            {% endif %}
+                        </div>
+                        
+                        {% if suspicious_regions %}
+                        <h6 class="mt-4 mb-3">Suspicious Regions Detected</h6>
+                        <div class="list-group">
+                            {% for region in suspicious_regions %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">Region {{ forloop.counter }}</small>
+                                        <p class="mb-0 small">
+                                            Position: ({{ region.x1|floatformat:3 }}, {{ region.y1|floatformat:3 }}) - 
+                                            ({{ region.x2|floatformat:3 }}, {{ region.y2|floatformat:3 }})
+                                        </p>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-secondary">
+                                            {% if region.detection_method == 'ELA' %}
+                                                ELA
+                                            {% elif region.detection_method == 'COPY_MOVE' %}
+                                                Copy-Move
+                                            {% elif region.detection_method == 'NOISE' %}
+                                                Noise
+                                            {% else %}
+                                                {{ region.detection_method }}
+                                            {% endif %}
+                                        </span>
+                                        <span class="badge {% if region.confidence >= 70 %}bg-danger{% elif region.confidence >= 40 %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ region.confidence|floatformat:1 }}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                            <p>No suspicious regions detected</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Metadata Analysis -->
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-database me-2"></i>
+                            Metadata Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if metadata %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Metadata Suspicion Score</span>
+                                <span class="fw-bold">{{ metadata.metadata_score|floatformat:2 }}</span>
+                            </div>
+                            <div class="progress" style="height: 0.75rem;">
+                                <div class="progress-bar {% if metadata.metadata_score >= 60 %}bg-danger{% elif metadata.metadata_score >= 30 %}bg-warning{% else %}bg-success{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ metadata.metadata_score }}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if component_scores.metadata_confidence %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Metadata Confidence</span>
+                                <span class="fw-bold">{{ component_scores.metadata_confidence|floatformat:2 }}%</span>
+                            </div>
+                            <div class="progress" style="height: 0.75rem;">
+                                <div class="progress-bar {% if component_scores.metadata_confidence >= 70 %}bg-success{% elif component_scores.metadata_confidence >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ component_scores.metadata_confidence|floatformat:2 }}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Software Detection -->
+                        <div class="mb-3">
+                            <h6><i class="fas fa-laptop-code me-2"></i>Software Information</h6>
+                            {% if metadata.software_detected %}
+                            <div class="alert {% if metadata.editing_software_found %}alert-warning{% else %}alert-info{% endif %}">
+                                <strong>Detected:</strong> {{ metadata.software_detected }}
+                                {% if metadata.editing_software_found %}
+                                <br><small class="text-danger">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Editing software signature found!
+                                </small>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No software information found in metadata</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Camera Information -->
+                        <div class="mb-3">
+                            <h6><i class="fas fa-camera me-2"></i>Camera Information</h6>
+                            {% if metadata.camera_make or metadata.camera_model %}
+                            <p class="mb-0">
+                                <strong>Make:</strong> {{ metadata.camera_make|default:"Unknown" }}<br>
+                                <strong>Model:</strong> {{ metadata.camera_model|default:"Unknown" }}
+                            </p>
+                            {% else %}
+                            <p class="text-muted">No camera information found</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Timestamps -->
+                        <div class="mb-3">
+                            <h6><i class="fas fa-clock me-2"></i>Timestamps</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td>Original:</td>
+                                    <td>{{ metadata.datetime_original|default:"Not available" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Digitized:</td>
+                                    <td>{{ metadata.datetime_digitized|default:"Not available" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Modified:</td>
+                                    <td>{{ metadata.datetime_modified|default:"Not available" }}</td>
+                                </tr>
+                            </table>
+                            {% if metadata.timestamp_inconsistent %}
+                            <div class="alert alert-warning py-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Timestamp inconsistencies detected!
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Suspicious Indicators -->
+                        {% if metadata.suspicious_indicators %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Suspicious Indicators</h6>
+                            <pre class="mb-0 small">{{ metadata.suspicious_indicators }}</pre>
+                        </div>
+                        {% endif %}
+                        
+                        {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Metadata analysis was not performed</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recommendations -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Recommendations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if result.forgery_status == 'authentic' %}
+                <div class="alert alert-success mb-0">
+                    <h6><i class="fas fa-check-circle me-2"></i>Image Appears Authentic</h6>
+                    <p class="mb-0">Based on our analysis, this image shows no significant signs of manipulation. However, please note that no detection system is 100% accurate. For critical applications, consider consulting a digital forensics expert.</p>
+                </div>
+                {% elif result.forgery_status == 'suspicious' %}
+                <div class="alert alert-warning mb-0">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Suspicious Elements Detected</h6>
+                    <p class="mb-0">Our analysis has detected some anomalies that may indicate manipulation. We recommend:</p>
+                    <ul class="mb-0 mt-2">
+                        <li>Reviewing the highlighted suspicious regions carefully</li>
+                        <li>Checking the metadata for inconsistencies</li>
+                        <li>Consulting with a digital forensics expert for verification</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="alert alert-danger mb-0">
+                    <h6><i class="fas fa-times-circle me-2"></i>Manipulation Likely Detected</h6>
+                    <p class="mb-0">Our analysis strongly suggests this image has been manipulated. Key findings:</p>
+                    <ul class="mb-0 mt-2">
+                        <li>Significant error level differences detected</li>
+                        <li>Suspicious regions identified in the heatmap</li>
+                        <li>Metadata anomalies present</li>
+                    </ul>
+                    <p class="mt-2 mb-0"><strong>Recommendation:</strong> Do not use this image as evidence without further expert verification.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalImageTitle">Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalImage" src="" alt="" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openImageModal(src, title) {
+        document.getElementById('modalImage').src = src;
+        document.getElementById('modalImageTitle').textContent = title;
+        new bootstrap.Modal(document.getElementById('imageModal')).show();
+    }
+</script>
+{% endblock %}

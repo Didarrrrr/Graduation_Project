@@ -1,0 +1,40 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ─── Virtual environment ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ─── Django ───────────────────────────────────────────────────────────────────
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/uploads/
+
+# ─── Environment / secrets ────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+
+# ─── IDE / editor ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.qodo/
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

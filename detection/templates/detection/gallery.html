@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Gallery{% endblock %}
+
+{% block content %}
+<!-- Gallery Header -->
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="fw-bold mb-2">Analysis Gallery</h1>
+                <p class="text-muted mb-0">Browse all analyzed images and their results</p>
+            </div>
+            <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>New Analysis
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics -->
+<section class="py-3">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="card text-center p-3 border-theme">
+                    <h3 class="text-primary-custom mb-1">{{ total_count }}</h3>
+                    <small class="text-muted">Total Analyses</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center p-3 border-theme border-success">
+                    <h3 class="text-clean mb-1">{{ authentic_count }}</h3>
+                    <small class="text-muted">Authentic</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center p-3 border-theme border-warning">
+                    <h3 class="text-uncertain mb-1">{{ suspicious_count }}</h3>
+                    <small class="text-muted">Suspicious</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center p-3 border-theme border-danger">
+                    <h3 class="text-forgery mb-1">{{ forged_count }}</h3>
+                    <small class="text-muted">Forged</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filters -->
+<section class="py-3">
+    <div class="container">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Filter by Status</label>
+                        <select name="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            <option value="authentic" {% if status_filter == 'authentic' %}selected{% endif %}>Authentic</option>
+                            <option value="suspicious" {% if status_filter == 'suspicious' %}selected{% endif %}>Suspicious</option>
+                            <option value="forged" {% if status_filter == 'forged' %}selected{% endif %}>Forged</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Apply Filter
+                        </button>
+                        {% if status_filter %}
+                        <a href="{% url 'gallery' %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times me-2"></i>Clear
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Gallery Grid -->
+<section class="py-4">
+    <div class="container">
+        {% if analyses %}
+        <div class="row g-4">
+            {% for analysis in analyses %}
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="card h-100">
+                    <div class="position-relative">
+                        {% if analysis.image.original_image %}
+                        <img src="{{ analysis.image.original_image.url }}" 
+                             alt="{{ analysis.image.filename }}"
+                             class="card-img-top"
+                             style="height: 180px; object-fit: cover;">
+                        {% endif %}
+                        <div class="position-absolute top-0 end-0 m-2">
+                            {% if analysis.forgery_status == 'authentic' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Authentic
+                            </span>
+                            {% elif analysis.forgery_status == 'suspicious' %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Suspicious
+                            </span>
+                            {% elif analysis.forgery_status == 'forged' %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times me-1"></i>Forged
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate" title="{{ analysis.image.filename }}">
+                            {{ analysis.image.filename }}
+                        </h6>
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ analysis.analysis_completed_at|date:"M d, Y" }}
+                            </small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <small class="text-muted">Confidence</small>
+                                <div class="fw-bold {% if analysis.confidence_score >= 60 %}text-forgery{% elif analysis.confidence_score >= 30 %}text-uncertain{% else %}text-clean{% endif %}">
+                                    {{ analysis.confidence_score|floatformat:1 }}%
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">ELA Score</small>
+                                <div class="fw-bold">{{ analysis.ela_score|floatformat:1 }}</div>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'analysis_result' analysis.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            <form method="post" action="{% url 'delete_analysis' analysis.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                                        onclick="return confirm('Are you sure you want to delete this analysis?');">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
+                            </form>
+                            <a href="{% url 'download_report' analysis.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-download me-1"></i>Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Gallery pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        <i class="fas fa-chevron-left me-1"></i>Previous
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fas fa-chevron-left me-1"></i>Previous</span>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        Next<i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Next<i class="fas fa-chevron-right ms-1"></i></span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-images fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No analyses found</h4>
+            <p class="text-muted">Start by uploading an image for analysis</p>
+            <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="fas fa-upload me-2"></i>Upload Image
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
