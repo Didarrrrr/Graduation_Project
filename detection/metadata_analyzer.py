@@ -1,17 +1,5 @@
-"""
-EXIF Metadata Analyzer.
-
-Improved metadata analysis:
-- JPEG quantization table analysis for double-compression detection
-- EXIF thumbnail consistency check
-- Expanded editing software detection with severity tiers
-- Resolution/aspect ratio consistency checks
-- Better calibrated scoring
-"""
-
 import json
 import re
-import struct
 from datetime import datetime
 from io import BytesIO
 
@@ -22,9 +10,7 @@ from PIL.ExifTags import TAGS
 
 
 class MetadataAnalyzer:
-    """Analyzer for EXIF metadata to detect image manipulation."""
 
-    # Tier 1: Destructive / heavy editors — higher suspicion
     HEAVY_EDITORS = [
         "photoshop", "gimp", "paint.net", "corel", "paintshop",
         "pixlr", "fotor", "luminar", "picsart", "faceapp",
@@ -32,7 +18,6 @@ class MetadataAnalyzer:
         "retouch", "inpaint",
     ]
 
-    # Tier 2: Non-destructive / workflow tools — lower suspicion
     LIGHT_EDITORS = [
         "lightroom", "capture one", "darktable", "rawtherapee",
         "affinity", "canva", "snapseed", "vsco", "adobe camera raw",
@@ -48,8 +33,6 @@ class MetadataAnalyzer:
         r"clone", r"heal", r"splice", r"tamper",
     ]
 
-    # Standard JPEG Q-tables (luminance) from the JPEG specification (quality ~75)
-    # Used as reference for detecting non-standard quantization
     STANDARD_LUMINANCE_QTABLE = np.array([
         16, 11, 10, 16, 24, 40, 51, 61,
         12, 12, 14, 19, 26, 58, 60, 55,
@@ -66,7 +49,6 @@ class MetadataAnalyzer:
         self.metadata_dict = {}
 
     def analyze(self, image_path):
-        """Perform comprehensive metadata analysis."""
         self.suspicious_indicators = []
         self.metadata_dict = {}
 
@@ -88,7 +70,6 @@ class MetadataAnalyzer:
             camera_info = self._analyze_camera(exif_data, image_format=image_format)
             integrity_info = self._analyze_metadata_integrity(exif_data)
 
-            # --- New analyses ---
             qtable_info = self._analyze_quantization_tables(image_path)
             thumbnail_info = self._analyze_thumbnail_consistency(image_path)
             resolution_info = self._analyze_resolution_consistency(exif_data, actual_size)
@@ -143,7 +124,6 @@ class MetadataAnalyzer:
             }
     
     def _extract_exif(self, image_path):
-        """Extract EXIF data from image."""
         exif_data = {}
 
         try:
@@ -201,7 +181,6 @@ class MetadataAnalyzer:
                 software = raw_software.lower()
                 result["software"] = raw_software
 
-                # Check heavy editors first
                 for editor in self.HEAVY_EDITORS:
                     if editor in software:
                         result["is_editing_software"] = True
@@ -211,7 +190,6 @@ class MetadataAnalyzer:
                         )
                         break
 
-                # Check light editors
                 if not result["is_heavy_editor"]:
                     for editor in self.LIGHT_EDITORS:
                         if editor in software:
@@ -284,7 +262,6 @@ class MetadataAnalyzer:
                     self.suspicious_indicators.append(f"Future timestamp detected: {ts}")
                     result["inconsistent"] = True
 
-        # Do not mark as inconsistent for tiny normal differences.
         if len(parsed_dates) > 1:
             seconds_gap = (max(parsed_dates) - min(parsed_dates)).total_seconds()
             if seconds_gap > 120:
@@ -377,16 +354,6 @@ class MetadataAnalyzer:
         }
 
     def _analyze_quantization_tables(self, image_path):
-        """
-        Analyze JPEG quantization tables for signs of double compression.
-        
-        Double-compressed images (saved twice at different quality levels) have
-        characteristic Q-table signatures. Non-standard Q-tables indicate
-        recompression at different quality levels.
-        
-        Returns:
-            dict with qtable analysis results
-        """
         result = {
             "has_qtable": False,
             "is_standard": True,
@@ -399,43 +366,33 @@ class MetadataAnalyzer:
                 if img.format != "JPEG":
                     return result
 
-                # PIL provides quantization tables for JPEG images
                 qtables = img.quantization
                 if not qtables:
                     return result
 
                 result["has_qtable"] = True
 
-                # Get the luminance Q-table (table 0)
                 if 0 in qtables:
                     lum_table = np.array(qtables[0], dtype=np.float64)
 
-                    # Compare against standard JPEG Q-table
-                    # Compute normalized deviation
                     deviation = np.mean(np.abs(lum_table - self.STANDARD_LUMINANCE_QTABLE) /
                                         (self.STANDARD_LUMINANCE_QTABLE + 1e-6))
                     result["qtable_deviation"] = float(deviation)
 
-                    # High deviation from standard suggests non-standard compression
                     if deviation > 0.5:
                         result["is_standard"] = False
 
-                    # Check for double compression signature:
-                    # Ratio of Q-values should be approximately constant for single compression
-                    # but shows periodic patterns for double compression
                     if len(lum_table) >= 64:
                         ratios = lum_table / (self.STANDARD_LUMINANCE_QTABLE + 1e-6)
                         ratio_std = np.std(ratios)
                         ratio_mean = np.mean(ratios)
 
-                        # High variance in ratios suggests double compression
                         if ratio_mean > 0 and ratio_std / ratio_mean > 0.3:
                             result["double_compression_likely"] = True
                             self.suspicious_indicators.append(
                                 "JPEG quantization table suggests possible double compression"
                             )
 
-                # Check if there are multiple Q-tables with unusual properties
                 if len(qtables) > 2:
                     self.suspicious_indicators.append(
                         f"Unusual number of JPEG quantization tables: {len(qtables)}"
@@ -447,14 +404,6 @@ class MetadataAnalyzer:
         return result
 
     def _analyze_thumbnail_consistency(self, image_path):
-        """
-        Compare EXIF thumbnail against a downscaled version of the main image.
-        Manipulated images often retain the original pre-edit thumbnail,
-        creating a mismatch.
-        
-        Returns:
-            dict with thumbnail consistency results
-        """
         result = {
             "has_thumbnail": False,
             "thumbnail_mismatch": False,
@@ -470,27 +419,20 @@ class MetadataAnalyzer:
 
             result["has_thumbnail"] = True
 
-            # Load thumbnail
             thumb_img = Image.open(BytesIO(thumbnail_data)).convert("RGB")
             thumb_array = np.array(thumb_img, dtype=np.float32)
 
-            # Load main image and downscale to thumbnail size
             with Image.open(image_path) as main_img:
                 main_rgb = main_img.convert("RGB")
                 main_resized = main_rgb.resize(thumb_img.size, Image.LANCZOS)
                 main_array = np.array(main_resized, dtype=np.float32)
 
-            # Compare thumbnail vs downscaled main image
-            # Use normalized mean absolute error
             diff = np.abs(thumb_array - main_array)
             mae = float(np.mean(diff))
 
-            # Normalize to 0-1 (255 is max possible difference)
             mismatch = mae / 255.0
             result["mismatch_score"] = round(mismatch, 4)
 
-            # Threshold: small differences are expected due to resampling artifacts
-            # Score above 0.08 indicates significant content difference
             if mismatch > 0.08:
                 result["thumbnail_mismatch"] = True
                 self.suspicious_indicators.append(
@@ -503,20 +445,12 @@ class MetadataAnalyzer:
         return result
 
     def _analyze_resolution_consistency(self, exif_data, actual_size):
-        """
-        Check if EXIF width/height matches actual image dimensions.
-        Mismatches indicate the image was cropped/resized after EXIF was written.
-        
-        Returns:
-            dict with resolution consistency results
-        """
         result = {
             "consistent": True,
             "exif_size": None,
             "actual_size": actual_size,
         }
 
-        # Check various EXIF size tags
         exif_width = None
         exif_height = None
 
@@ -544,7 +478,6 @@ class MetadataAnalyzer:
         if exif_width and exif_height and actual_size[0] > 0:
             result["exif_size"] = (exif_width, exif_height)
 
-            # Allow small tolerance (some exporters round dimensions)
             w_match = abs(exif_width - actual_size[0]) <= 2
             h_match = abs(exif_height - actual_size[1]) <= 2
 
@@ -563,16 +496,14 @@ class MetadataAnalyzer:
     ):
         score = 0.0
         fmt = str(image_format).upper()
-        # PNG/WebP often ship without EXIF; down-weight "missing profile" penalties.
         lossless_or_sparse = fmt in ("PNG", "WEBP", "GIF", "BMP")
         camera_penalty_scale = 0.42 if lossless_or_sparse else 1.0
         presence_penalty_scale = 0.55 if lossless_or_sparse else 1.0
 
-        # Software scoring: distinguish heavy vs light editors
         if software_info.get("is_heavy_editor"):
-            score += 40  # Heavy editing software (reduced from 45)
+            score += 40
         elif software_info.get("is_light_editor"):
-            score += 22  # Non-destructive editors are less suspicious
+            score += 22
         elif software_info.get("is_social_export"):
             score += 18
         elif software_info.get("software") and not software_info.get("is_camera_pipeline"):
@@ -589,21 +520,18 @@ class MetadataAnalyzer:
         presence_ratio = integrity_info.get("presence_ratio", 0.0)
         score += max(0.0, (0.6 - presence_ratio) * 20) * presence_penalty_scale
 
-        # --- Quantization table analysis ---
         if qtable_info and qtable_info.get("double_compression_likely"):
             score += 20
         elif qtable_info and not qtable_info.get("is_standard"):
             score += 8
 
-        # --- Thumbnail consistency ---
         if thumbnail_info and thumbnail_info.get("thumbnail_mismatch"):
             mismatch = thumbnail_info.get("mismatch_score", 0)
             if mismatch > 0.15:
-                score += 25  # Strong mismatch
+                score += 25
             elif mismatch > 0.08:
-                score += 15  # Moderate mismatch
+                score += 15
 
-        # --- Resolution consistency ---
         if resolution_info and not resolution_info.get("consistent", True):
             score += 10
 
@@ -624,6 +552,5 @@ class MetadataAnalyzer:
 
 
 def analyze_metadata(image_path):
-    """Convenience function to analyze image metadata."""
     analyzer = MetadataAnalyzer()
     return analyzer.analyze(image_path)

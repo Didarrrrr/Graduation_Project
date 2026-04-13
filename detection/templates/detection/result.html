@@ -3,7 +3,6 @@
 {% block title %}Analysis Result{% endblock %}
 
 {% block content %}
-<!-- Result Header -->
 <section class="py-4">
     <div class="container">
         <nav aria-label="breadcrumb">
@@ -34,7 +33,6 @@
     </div>
 </section>
 
-<!-- Status Banner -->
 <section class="py-3">
     <div class="container">
         <div class="card {% if result.forgery_status == 'authentic' %}verdict-card-authentic{% elif result.forgery_status == 'suspicious' %}verdict-card-suspicious{% else %}verdict-card-forged{% endif %}">
@@ -82,7 +80,6 @@
     </div>
 </section>
 
-<!-- Image Comparison -->
 <section class="py-4">
     <div class="container">
         <h4 class="mb-4">
@@ -90,7 +87,6 @@
             Visual Analysis
         </h4>
         <div class="row g-4">
-            <!-- Original Image -->
             <div class="col-md-7 col-lg-4">
                 <div class="card h-100">
                     <div class="card-header py-2">
@@ -108,7 +104,6 @@
                 </div>
             </div>
             
-            <!-- ELA Image -->
             <div class="col-md-7 col-lg-4">
                 <div class="card h-100">
                     <div class="card-header py-2">
@@ -131,7 +126,6 @@
                 </div>
             </div>
             
-            <!-- Heatmap -->
             <div class="col-md-7 col-lg-4">
                 <div class="card h-100">
                     <div class="card-header py-2">
@@ -161,11 +155,9 @@
     </div>
 </section>
 
-<!-- Analysis Details -->
 <section class="py-4">
     <div class="container">
         <div class="row g-4">
-            <!-- ELA Analysis Details -->
             <div class="col-lg-6">
                 <div class="card h-100">
                     <div class="card-header">
@@ -279,7 +271,6 @@
                 </div>
             </div>
             
-            <!-- Metadata Analysis -->
             <div class="col-lg-6">
                 <div class="card h-100">
                     <div class="card-header">
@@ -318,7 +309,6 @@
                         </div>
                         {% endif %}
                         
-                        <!-- Software Detection -->
                         <div class="mb-3">
                             <h6><i class="fas fa-laptop-code me-2"></i>Software Information</h6>
                             {% if metadata.software_detected %}
@@ -336,7 +326,6 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Camera Information -->
                         <div class="mb-3">
                             <h6><i class="fas fa-camera me-2"></i>Camera Information</h6>
                             {% if metadata.camera_make or metadata.camera_model %}
@@ -349,7 +338,6 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Timestamps -->
                         <div class="mb-3">
                             <h6><i class="fas fa-clock me-2"></i>Timestamps</h6>
                             <table class="table table-sm">
@@ -374,7 +362,6 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Suspicious Indicators -->
                         {% if metadata.suspicious_indicators %}
                         <div class="alert alert-warning">
                             <h6><i class="fas fa-exclamation-triangle me-2"></i>Suspicious Indicators</h6>
@@ -395,7 +382,6 @@
     </div>
 </section>
 
-<!-- Recommendations -->
 <section class="py-4">
     <div class="container">
         <div class="card">
@@ -438,7 +424,6 @@
     </div>
 </section>
 
-<!-- Image Modal -->
 <div class="modal fade" id="imageModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">

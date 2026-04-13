@@ -1,7 +1,3 @@
-"""
-Compact PDF summary for an analysis (ReportLab). Kept short for quick reading.
-"""
-
 from __future__ import annotations
 
 import os
@@ -22,7 +18,6 @@ from reportlab.platypus import (
 
 from .models import MetadataAnalysis
 
-# Light-theme palette (PDF is always light for readability)
 C_BG = colors.HexColor("#FFFFFF")
 C_MUTED = colors.HexColor("#64748B")
 C_BODY = colors.HexColor("#1E293B")
@@ -48,7 +43,6 @@ def _escape(s) -> str:
 
 
 def _html_hex(c: colors.Color) -> str:
-    """#rrggbb for ReportLab Paragraph markup."""
     return "#%06x" % (c.int_rgb() & 0xFFFFFF)
 
 
@@ -63,7 +57,6 @@ def _status_colors(status: str):
 
 
 def build_analysis_report_pdf(result, component_scores: dict) -> BytesIO:
-    """Build a short PDF summary for an AnalysisResult."""
     buffer = BytesIO()
     meta = _safe_metadata(result)
     accent, verdict_bg = _status_colors(result.forgery_status or "")

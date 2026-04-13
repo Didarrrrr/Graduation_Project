@@ -1,9 +1,3 @@
-"""
-Single entry point for running the full four-method analysis and persisting results.
-
-Used by the web analyze view and the JSON API so behavior and URLs stay consistent.
-"""
-
 import json
 import time
 
@@ -17,17 +11,11 @@ from .metadata_analyzer import analyze_metadata
 from .advanced_detectors import run_advanced_analyses
 from .fusion import fuse_four_method_scores
 
-# Aligned with UI labels; change in one place if you recalibrate thresholds.
 SCORE_FORGED_MIN = 70.0
 SCORE_SUSPICIOUS_MIN = 40.0
 
 
 def execute_full_analysis(uploaded_image: UploadedImage, analysis_settings: dict) -> AnalysisResult:
-    """
-    Run ELA + metadata + copy-move + noise, save artifacts, return completed AnalysisResult.
-
-    Idempotent for retries: clears prior SuspiciousRegions and replaces MetadataAnalysis.
-    """
     result, _ = AnalysisResult.objects.get_or_create(
         image=uploaded_image,
         defaults={
@@ -110,6 +98,10 @@ def execute_full_analysis(uploaded_image: UploadedImage, analysis_settings: dict
             detection_method="NOISE",
         )
 
+    ela_score = ela_results["score"]
+    copy_move_score = copy_move_results.get("score", 0)
+    noise_score = noise_results.get("score", 0)
+
     metadata_results = {}
     if analysis_settings.get("include_metadata", True):
         metadata_results = analyze_metadata(image_path)
@@ -132,10 +124,7 @@ def execute_full_analysis(uploaded_image: UploadedImage, analysis_settings: dict
             metadata_score=metadata_results.get("metadata_score", 0),
         )
 
-        ela_score = ela_results["score"]
         metadata_score = metadata_results.get("metadata_score", 0)
-        copy_move_score = copy_move_results.get("score", 0)
-        noise_score = noise_results.get("score", 0)
         combined_score, fusion_diag = fuse_four_method_scores(
             ela_score,
             metadata_score,
@@ -148,9 +137,6 @@ def execute_full_analysis(uploaded_image: UploadedImage, analysis_settings: dict
             include_metadata=True,
         )
     else:
-        ela_score = ela_results["score"]
-        copy_move_score = copy_move_results.get("score", 0)
-        noise_score = noise_results.get("score", 0)
         combined_score, fusion_diag = fuse_four_method_scores(
             ela_score,
             0,

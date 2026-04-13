@@ -1,18 +1,9 @@
-"""
-Django Admin configuration for Image Forgery Detection System
-
-Provides admin interface for managing uploaded images and analysis results.
-"""
-
 from django.contrib import admin
-from .models import UploadedImage, AnalysisResult, MetadataAnalysis, SuspiciousRegion, AnalysisLog
+from .models import UploadedImage, AnalysisResult, MetadataAnalysis, SuspiciousRegion
 from django.utils.html import format_html
 
 @admin.register(UploadedImage)
 class UploadedImageAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for UploadedImage model.
-    """
     list_display = ['id', 'filename', 'image_format', 'file_size_formatted', 'uploaded_at', 'processed']
     list_filter = ['processed', 'image_format', 'uploaded_at']
     search_fields = ['filename', 'id']
@@ -20,7 +11,6 @@ class UploadedImageAdmin(admin.ModelAdmin):
     date_hierarchy = 'uploaded_at'
     
     def file_size_formatted(self, obj):
-        """Format file size for display."""
         if obj.file_size:
             if obj.file_size < 1024:
                 return f"{obj.file_size} B"
@@ -33,9 +23,6 @@ class UploadedImageAdmin(admin.ModelAdmin):
 
 
 class SuspiciousRegionInline(admin.TabularInline):
-    """
-    Inline admin for suspicious regions.
-    """
     model = SuspiciousRegion
     extra = 0
     readonly_fields = ['confidence', 'area_size', 'detection_method']
@@ -43,9 +30,6 @@ class SuspiciousRegionInline(admin.TabularInline):
 
 
 class MetadataAnalysisInline(admin.StackedInline):
-    """
-    Inline admin for metadata analysis.
-    """
     model = MetadataAnalysis
     extra = 0
     readonly_fields = [
@@ -73,9 +57,6 @@ class MetadataAnalysisInline(admin.StackedInline):
 
 @admin.register(AnalysisResult)
 class AnalysisResultAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for AnalysisResult model.
-    """
     list_display = [
         'id', 'image_id', 'forgery_status_badge', 'confidence_score',
         'ela_score', 'processing_time_formatted', 'analysis_completed_at'
@@ -105,12 +86,10 @@ class AnalysisResultAdmin(admin.ModelAdmin):
     )
     
     def image_id(self, obj):
-        """Display image ID."""
         return f"Image #{obj.image.id}"
     image_id.short_description = 'Image'
     
     def forgery_status_badge(self, obj):
-        """Display status with color coding."""
         colors = {
             'authentic': 'green',
             'suspicious': 'orange',
@@ -125,7 +104,6 @@ class AnalysisResultAdmin(admin.ModelAdmin):
     forgery_status_badge.short_description = 'Status'
     
     def processing_time_formatted(self, obj):
-        """Format processing time."""
         if obj.processing_time:
             return f"{obj.processing_time:.2f}s"
         return "N/A"
@@ -134,9 +112,6 @@ class AnalysisResultAdmin(admin.ModelAdmin):
 
 @admin.register(MetadataAnalysis)
 class MetadataAnalysisAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for MetadataAnalysis model.
-    """
     list_display = [
         'id', 'analysis_result_id', 'editing_software_found',
         'software_detected_short', 'metadata_score', 'timestamp_inconsistent'
@@ -146,12 +121,10 @@ class MetadataAnalysisAdmin(admin.ModelAdmin):
     readonly_fields = ['metadata_json']
     
     def analysis_result_id(self, obj):
-        """Display analysis result ID."""
         return f"Analysis #{obj.analysis_result.id}"
     analysis_result_id.short_description = 'Analysis'
     
     def software_detected_short(self, obj):
-        """Display shortened software name."""
         if obj.software_detected:
             return obj.software_detected[:30] + '...' if len(obj.software_detected) > 30 else obj.software_detected
         return "None"
@@ -160,38 +133,10 @@ class MetadataAnalysisAdmin(admin.ModelAdmin):
 
 @admin.register(SuspiciousRegion)
 class SuspiciousRegionAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for SuspiciousRegion model.
-    """
     list_display = ['id', 'analysis_result_id', 'confidence', 'area_size', 'detection_method']
     list_filter = ['detection_method', 'confidence']
     search_fields = ['analysis_result__image__filename']
     
     def analysis_result_id(self, obj):
-        """Display analysis result ID."""
         return f"Analysis #{obj.analysis_result.id}"
     analysis_result_id.short_description = 'Analysis'
-
-
-@admin.register(AnalysisLog)
-class AnalysisLogAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for AnalysisLog model.
-    """
-    list_display = ['timestamp', 'level', 'message_short', 'image_id']
-    list_filter = ['level', 'timestamp']
-    search_fields = ['message', 'details']
-    readonly_fields = ['timestamp']
-    date_hierarchy = 'timestamp'
-    
-    def message_short(self, obj):
-        """Display shortened message."""
-        return obj.message[:50] + '...' if len(obj.message) > 50 else obj.message
-    message_short.short_description = 'Message'
-    
-    def image_id(self, obj):
-        """Display image ID."""
-        if obj.image:
-            return f"Image #{obj.image.id}"
-        return "N/A"
-    image_id.short_description = 'Image'

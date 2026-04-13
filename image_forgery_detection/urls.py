@@ -24,7 +24,5 @@ urlpatterns = [
     path('', include('detection.urls')),
 ]
 
-# User uploads only — app/static is served by django.contrib.staticfiles in DEBUG
-# (and WhiteNoise + collectstatic in production). Do not map STATIC_URL to STATIC_ROOT here.
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
