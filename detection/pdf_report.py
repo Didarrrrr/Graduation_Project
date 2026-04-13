@@ -1,8 +1,6 @@
 from __future__ import annotations
-
 import os
 from io import BytesIO
-
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
