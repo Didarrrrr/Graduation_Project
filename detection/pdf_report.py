@@ -111,7 +111,6 @@ def build_analysis_report_pdf(result, component_scores: dict) -> BytesIO:
         title="Forgery analysis summary",
     )
     story = []
-    w = 6.5 * inch
 
     story.append(Paragraph("Image forgery analysis — summary", styles["ReportTitle"]))
     story.append(

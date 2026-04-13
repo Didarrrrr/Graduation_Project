@@ -1,8 +1,7 @@
 import json
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse
-from django.urls import reverse
+from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.conf import settings
