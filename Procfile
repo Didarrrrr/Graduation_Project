@@ -1,1 +1,1 @@
-web: gunicorn image_forgery_detection.wsgi
+web: gunicorn image_forgery_detection.wsgi --bind 0.0.0.0:$PORT
