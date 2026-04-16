@@ -172,5 +172,5 @@ ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
 MAX_IMAGE_SIZE = 10 * 1024 * 1024 # 10 MB
 ELA_QUALITY = 95
 # Fixed UI/backend detection sensitivity (0.1–1.0); used to tune ELA mask threshold.
-DETECTION_SENSITIVITY = 0.75
+DETECTION_SENSITIVITY = 0.95
 ELA_THRESHOLD = int(os.environ.get("ELA_THRESHOLD", "30"))

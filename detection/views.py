@@ -23,7 +23,7 @@ from .forms import ImageUploadForm, AnalysisSettingsForm
 from .pipeline import execute_full_analysis
 
 ELA_QUALITY = getattr(settings, "ELA_QUALITY", 95)
-DETECTION_SENSITIVITY = getattr(settings, "DETECTION_SENSITIVITY", 0.75)
+DETECTION_SENSITIVITY = getattr(settings, "DETECTION_SENSITIVITY", 0.95)
 
 
 def home_view(request):
