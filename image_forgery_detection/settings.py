@@ -184,3 +184,7 @@ AWS_STORAGE_BUCKET_NAME = os.environ.get('B2_BUCKET_NAME')
 AWS_S3_ENDPOINT_URL = os.environ.get('B2_ENDPOINT')
 AWS_DEFAULT_ACL = 'public-read'
 AWS_S3_FILE_OVERWRITE = False
+
+# ← ADD THESE TWO NEW LINES
+AWS_S3_CUSTOM_DOMAIN = None
+MEDIA_URL = os.environ.get('B2_ENDPOINT', '') + '/file/' + os.environ.get('B2_BUCKET_NAME', '') + '/'
