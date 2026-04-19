@@ -187,6 +187,6 @@ AWS_S3_FILE_OVERWRITE = False
 
 # ← ADD THESE TWO NEW LINES
 AWS_S3_CUSTOM_DOMAIN = None
-MEDIA_URL = os.environ.get('B2_ENDPOINT', '') + '/file/' + os.environ.get('B2_BUCKET_NAME', '') + '/'
+MEDIA_URL = os.environ.get('B2_ENDPOINT', '') + '/' + os.environ.get('B2_BUCKET_NAME', '') + '/'
 AWS_S3_ADDRESSING_STYLE = 'path'
 AWS_S3_SIGNATURE_VERSION = 's3v4'
