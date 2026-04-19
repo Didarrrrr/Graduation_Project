@@ -37,7 +37,15 @@ def execute_full_analysis(uploaded_image: UploadedImage, analysis_settings: dict
     )
 
     start_time = time.time()
-    image_path = uploaded_image.original_image.path
+    # image_path = uploaded_image.original_image.path
+    
+    import tempfile
+    import os
+
+    # Download file from Backblaze to a temporary local file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_image.original_image.name)[1]) as tmp:
+        tmp.write(uploaded_image.original_image.read())
+        image_path = tmp.name
 
     SuspiciousRegion.objects.filter(analysis_result=result).delete()
     MetadataAnalysis.objects.filter(analysis_result=result).delete()
@@ -198,5 +206,11 @@ def execute_full_analysis(uploaded_image: UploadedImage, analysis_settings: dict
 
     uploaded_image.processed = True
     uploaded_image.save(update_fields=["processed"])
+
+    # Clean up temp file
+    try:
+        os.unlink(image_path)
+    except Exception:
+        pass
 
     return result
