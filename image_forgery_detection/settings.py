@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'detection',
-    'storages', 
 ]
 
 MIDDLEWARE = [
@@ -151,7 +150,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# MEDIA_URL = '/media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -175,18 +174,3 @@ ELA_QUALITY = 95
 # Fixed UI/backend detection sensitivity (0.1–1.0); used to tune ELA mask threshold.
 DETECTION_SENSITIVITY = 0.95
 ELA_THRESHOLD = int(os.environ.get("ELA_THRESHOLD", "30"))
-
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-AWS_ACCESS_KEY_ID = os.environ.get('B2_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('B2_APP_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('B2_BUCKET_NAME')
-AWS_S3_ENDPOINT_URL = os.environ.get('B2_ENDPOINT')
-AWS_DEFAULT_ACL = 'public-read'
-AWS_S3_FILE_OVERWRITE = False
-
-# ← ADD THESE TWO NEW LINES
-AWS_S3_CUSTOM_DOMAIN = None
-MEDIA_URL = os.environ.get('B2_ENDPOINT', '') + '/' + os.environ.get('B2_BUCKET_NAME', '') + '/'
-AWS_S3_ADDRESSING_STYLE = 'path'
-AWS_S3_SIGNATURE_VERSION = 's3v4'
